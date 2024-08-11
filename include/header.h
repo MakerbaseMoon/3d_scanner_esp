@@ -3,4 +3,7 @@
 
 #include <Arduino.h>
 
+#include "components/data.h"
+#include "components/network.h"
+
 #endif // __3D_SCANNER_HEADER_H__
