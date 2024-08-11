@@ -1,0 +1,6 @@
+#ifndef __3D_SCANNER_VERSION_H__
+#define __3D_SCANNER_VERSION_H__
+
+#define ESP32_3D_SCANNER_VERSION "0.0.0"
+
+#endif // __3D_SCANNER_VERSION_H__
