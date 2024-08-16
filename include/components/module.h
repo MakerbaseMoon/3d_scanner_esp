@@ -13,9 +13,18 @@
 
 #include "esp_log.h"
 
-#include "Adafruit_VL53L1X.h"
+#include <ArduinoJson.h>
+#include <Adafruit_VL53L1X.h>
+
+#include "components/data.h"
+#include "components/server.h"
 
 #define MODULE_TAG_NAME "module"
+
+#define SPI_MOSI 23
+#define SPI_MISO 19
+#define SPI_SCK  18
+#define SPI_CS    5
 
 // Z axis
 #define MOTOR1_STEP 25
@@ -25,6 +34,10 @@
 #define MOTOR1_UP   HIGH
 #define MOTOR1_DOWN LOW
 
+#define MOTOR1_DEFAULT_STEP_DEGREE 1.8
+#define MOTOR1_DEFAULT_MICRO_STEP  32
+#define MOTOR1_DEFAULT_MICRO_STEP_DEGREE ((MOTOR1_DEFAULT_STEP_DEGREE) / (MOTOR1_DEFAULT_MICRO_STEP))
+
 #define Z_AXIS_MOTOR_STEP (MOTOR1_STEP)
 #define Z_AXIS_MOTOR_DIR  (MOTOR1_DIR)
 #define Z_AXIS_MOTOR_EN   (MOTOR1_EN)
@@ -32,8 +45,8 @@
 #define Z_AXIS_MOTOR_UP   (MOTOR1_UP)
 #define Z_AXIS_MOTOR_DOWN (MOTOR1_DOWN)
 
-#define Z_AXIS_STEP_DELAY   300
-#define Z_AXIS_MAX_STEPS  47000
+#define Z_AXIS_STEP_MM 0.00125
+#define Z_AXIS_STEP_FLOAT ((Z_AXIS_STEP_MM) * 0.01)
 
 // X and Y axis
 #define MOTOR2_STEP 27
@@ -43,9 +56,6 @@
 #define X_Y_AXIS_MOTOR_STEP (MOTOR2_STEP)
 #define X_Y_AXIS_MOTOR_DIR  (MOTOR2_DIR)
 #define X_Y_AXIS_MOTOR_EN   (MOTOR2_EN)
-
-#define X_Y_AXIS_STEP_DELAY  800
-#define FULL_STEP_MAX_COUNT 6400
 
 // Stop Button
 #define BUTTON_PIN 35

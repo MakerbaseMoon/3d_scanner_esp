@@ -275,3 +275,195 @@ void get_mdns_hostname(char** hostname) {
         }
     }
 }
+
+
+void set_github(const char* username, const char* repo) {
+    if (username == NULL || repo == NULL) {
+        ESP_LOGE(NVS_TAG, "Github username or repo is NULL");
+        return;
+    }
+
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open(NVS_STORAGE, NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(NVS_TAG, "Error (%s) opening Github NVS handle", esp_err_to_name(err));
+    } else {
+        err = nvs_set_str(nvs_handle, NVS_GITHUB_USERNAME, username);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) writing Github username to NVS", esp_err_to_name(err));
+        }
+        err = nvs_set_str(nvs_handle, NVS_GITHUB_REPO, repo);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) writing Github repo to NVS", esp_err_to_name(err));
+        }
+        nvs_commit(nvs_handle);
+        nvs_close(nvs_handle);
+    }
+}
+
+void get_github(char** username, char** repo) {
+    if (*username != NULL ) free(*username);
+    if (*repo != NULL ) free(*repo);
+
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open(NVS_STORAGE, NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(NVS_TAG, "Error (%s) opening Github NVS handle", esp_err_to_name(err));
+    } else {
+        size_t required_size;
+        err = nvs_get_str(nvs_handle, NVS_GITHUB_USERNAME, NULL, &required_size);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) reading Github username from NVS", esp_err_to_name(err));
+        } else {
+            *username = (char*)malloc(required_size);
+            if (*username == NULL) {
+                ESP_LOGE(NVS_TAG, "Error allocating memory for Github username");
+            } else {
+                err = nvs_get_str(nvs_handle, NVS_GITHUB_USERNAME, *username, &required_size);
+                if (err != ESP_OK) {
+                    ESP_LOGE(NVS_TAG, "Error (%s) reading Github username from NVS", esp_err_to_name(err));
+                }
+            }
+        }
+
+        err = nvs_get_str(nvs_handle, NVS_GITHUB_REPO, NULL, &required_size);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) reading Github repo from NVS", esp_err_to_name(err));
+        } else {
+            *repo = (char*)malloc(required_size);
+            if (*repo == NULL) {
+                ESP_LOGE(NVS_TAG, "Error allocating memory for Github repo");
+            } else {
+                err = nvs_get_str(nvs_handle, NVS_GITHUB_REPO, *repo, &required_size);
+                if (err != ESP_OK) {
+                    ESP_LOGE(NVS_TAG, "Error (%s) reading Github repo from NVS", esp_err_to_name(err));
+                }
+            }
+        }
+        nvs_close(nvs_handle);
+    }
+
+    if (*username == NULL ) {
+        *username = (char*)malloc(strlen(NVS_GITHUB_USERNAME_DEFAULT) + 1);
+        if (*username != NULL) {
+            strcpy(*username, NVS_GITHUB_USERNAME_DEFAULT);
+        } else {
+            ESP_LOGE(NVS_TAG, "Error allocating memory for Github username default");
+        }
+    }
+
+    if (*repo == NULL ) {
+        *repo = (char*)malloc(strlen(NVS_GITHUB_REPO_DEFAULT) + 1);
+        if (*repo != NULL) {
+            strcpy(*repo, NVS_GITHUB_REPO_DEFAULT);
+        } else {
+            ESP_LOGE(NVS_TAG, "Error allocating memory for Github repo default");
+        }
+    }
+}
+
+void set_module(uint16_t z_axis_max, uint16_t z_axis_start_step, uint16_t z_axis_delay_time, uint16_t z_axis_one_time_step, 
+                uint16_t x_y_axis_max, uint16_t x_y_axis_step_delay_time, uint16_t x_y_axis_one_time_step,
+                uint16_t vl53l1x_center, uint16_t vl53l1x_timeing_budget) {
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open(NVS_STORAGE, NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(NVS_TAG, "Error (%s) opening Module NVS handle", esp_err_to_name(err));
+    } else {
+        err = nvs_set_u16(nvs_handle, NVS_Z_AXIS_MAX, z_axis_max);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) writing Z axis max to NVS", esp_err_to_name(err));
+        }
+        err = nvs_set_u16(nvs_handle, NVS_Z_AXIS_START_STEP, z_axis_start_step);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) writing Z axis start step to NVS", esp_err_to_name(err));
+        }
+        err = nvs_set_u16(nvs_handle, NVS_Z_AXIS_DELAY_TIME, z_axis_delay_time);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) writing Z axis delay time to NVS", esp_err_to_name(err));
+        }
+        err = nvs_set_u16(nvs_handle, NVS_Z_AXIS_ONE_TIME_STEP, z_axis_one_time_step);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) writing Z axis one time step to NVS", esp_err_to_name(err));
+        }
+        err = nvs_set_u16(nvs_handle, NVS_X_Y_AXIS_MAX, x_y_axis_max);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) writing X Y axis max to NVS", esp_err_to_name(err));
+        }
+        err = nvs_set_u16(nvs_handle, NVS_X_Y_AXIS_STEP_DELAY_TIME, x_y_axis_step_delay_time);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) writing X Y axis step delay time to NVS", esp_err_to_name(err));
+        }
+        err = nvs_set_u16(nvs_handle, NVS_X_Y_AXIS_ONE_TIME_STEP, x_y_axis_one_time_step);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) writing X Y axis one time step to NVS", esp_err_to_name(err));
+        }
+        err = nvs_set_u16(nvs_handle, NVS_VL53L1X_CENTER, vl53l1x_center);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) writing VL53L1X center to NVS", esp_err_to_name(err));
+        }
+        err = nvs_set_u16(nvs_handle, NVS_VL53L1X_TIMEING_BUDGET, vl53l1x_timeing_budget);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) writing VL53L1X timeing budget to NVS", esp_err_to_name(err));
+        }
+        nvs_commit(nvs_handle);
+        nvs_close(nvs_handle);
+    }
+}
+
+void get_module(uint16_t* z_axis_max, uint16_t* z_axis_start_step, uint16_t* z_axis_delay_time, uint16_t* z_axis_one_time_step, 
+                uint16_t* x_y_axis_max, uint16_t* x_y_axis_step_delay_time, uint16_t* x_y_axis_one_time_step,
+                uint16_t* vl53l1x_center, uint16_t* vl53l1x_timeing_budget) {
+    nvs_handle_t nvs_handle;
+    esp_err_t err = nvs_open(NVS_STORAGE, NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(NVS_TAG, "Error (%s) opening Module NVS handle", esp_err_to_name(err));
+    } else {
+        err = nvs_get_u16(nvs_handle, NVS_Z_AXIS_MAX, z_axis_max);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) reading Z axis max from NVS", esp_err_to_name(err));
+            *z_axis_max = NVS_Z_AXIS_MAX_DEFAULT;
+        }
+        err = nvs_get_u16(nvs_handle, NVS_Z_AXIS_START_STEP, z_axis_start_step);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) reading Z axis start step from NVS", esp_err_to_name(err));
+            *z_axis_start_step = NVS_Z_AXIS_START_STEP_DEFAULT;
+        }
+        err = nvs_get_u16(nvs_handle, NVS_Z_AXIS_DELAY_TIME, z_axis_delay_time);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) reading Z axis delay time from NVS", esp_err_to_name(err));
+            *z_axis_delay_time = NVS_Z_AXIS_DELAY_TIME_DEFAULT;
+        }
+        err = nvs_get_u16(nvs_handle, NVS_Z_AXIS_ONE_TIME_STEP, z_axis_one_time_step);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) reading Z axis one time step from NVS", esp_err_to_name(err));
+            *z_axis_one_time_step = NVS_Z_AXIS_ONE_TIME_STEP_DEFAULT;
+        }
+        err = nvs_get_u16(nvs_handle, NVS_X_Y_AXIS_MAX, x_y_axis_max);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) reading X Y axis max from NVS", esp_err_to_name(err));
+            *x_y_axis_max = NVS_X_Y_AXIS_MAX_DEFAULT;
+        }
+        err = nvs_get_u16(nvs_handle, NVS_X_Y_AXIS_STEP_DELAY_TIME, x_y_axis_step_delay_time);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) reading X Y axis step delay time from NVS", esp_err_to_name(err));
+            *x_y_axis_step_delay_time = NVS_X_Y_AXIS_STEP_DELAY_TIME_DEFAULT;
+        }
+        err = nvs_get_u16(nvs_handle, NVS_X_Y_AXIS_ONE_TIME_STEP, x_y_axis_one_time_step);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) reading X Y axis one time step from NVS", esp_err_to_name(err));
+            *x_y_axis_one_time_step = NVS_X_Y_AXIS_ONE_TIME_STEP_DEFAULT;
+        }
+        err = nvs_get_u16(nvs_handle, NVS_VL53L1X_CENTER, vl53l1x_center);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) reading VL53L1X center from NVS", esp_err_to_name(err));
+            *vl53l1x_center = NVS_VL53L1X_CENTER_DEFAULT;
+        }
+        err = nvs_get_u16(nvs_handle, NVS_VL53L1X_TIMEING_BUDGET, vl53l1x_timeing_budget);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) reading VL53L1X timeing budget from NVS", esp_err_to_name(err));
+            *vl53l1x_timeing_budget = NVS_VL53L1X_TIMEING_BUDGET_DEFAULT;
+        }
+        nvs_close(nvs_handle);
+    }
+}

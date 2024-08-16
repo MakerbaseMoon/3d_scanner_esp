@@ -96,9 +96,24 @@ void init_server() {
         char* ap_password = NULL;
         char* hostname = NULL;
 
+        uint16_t z_axis_max = NVS_Z_AXIS_MAX_DEFAULT;
+        uint16_t z_axis_start_step = NVS_Z_AXIS_START_STEP_DEFAULT;
+        uint16_t z_axis_delay_time = NVS_Z_AXIS_DELAY_TIME_DEFAULT;
+        uint16_t z_axis_one_time_step = NVS_Z_AXIS_ONE_TIME_STEP_DEFAULT;
+
+        uint16_t x_y_axis_max = NVS_X_Y_AXIS_MAX_DEFAULT;
+        uint16_t x_y_axis_step_delay_time = NVS_X_Y_AXIS_STEP_DELAY_TIME_DEFAULT;
+        uint16_t x_y_axis_one_time_step = NVS_X_Y_AXIS_ONE_TIME_STEP_DEFAULT;
+
+        uint16_t vl53l1x_center = NVS_VL53L1X_CENTER_DEFAULT;
+        uint16_t vl53l1x_timeing_budget = NVS_VL53L1X_TIMEING_BUDGET_DEFAULT;
+
         get_sta_wifi(&ssid, &password);
         get_ap_wifi(&ap_ssid, &ap_password);
         get_mdns_hostname(&hostname);
+        get_module(&z_axis_max, &z_axis_start_step, &z_axis_delay_time, &z_axis_one_time_step, 
+                    &x_y_axis_max, &x_y_axis_step_delay_time, &x_y_axis_one_time_step,
+                    &vl53l1x_center, &vl53l1x_timeing_budget);
 
         if (ssid != NULL && password != NULL && ap_ssid != NULL && ap_password != NULL && hostname != NULL) {
             JsonDocument doc;
@@ -106,14 +121,24 @@ void init_server() {
             doc["status"] = "ok";
             doc["path"] = "/api/info";
             JsonObject data = doc.createNestedObject("data");
+            data["mdns"] = hostname;
             JsonObject sta = data.createNestedObject("sta");
             sta["ssid"] = ssid;
             sta["password"] = password;
             JsonObject ap = data.createNestedObject("ap");
             ap["ssid"] = ap_ssid;
             ap["password"] = ap_password;
-            JsonObject mdns = data.createNestedObject("mdns");
-            mdns["hostname"] = hostname;
+            JsonObject module = data.createNestedObject("module");
+
+            module["z_axis_max"] = z_axis_max;
+            module["z_axis_start_step"] = z_axis_start_step;
+            module["z_axis_delay_time"] = z_axis_delay_time;
+            module["z_axis_one_time_step"] = z_axis_one_time_step;
+            module["x_y_axis_max"] = x_y_axis_max;
+            module["x_y_axis_step_delay_time"] = x_y_axis_step_delay_time;
+            module["x_y_axis_one_time_step"] = x_y_axis_one_time_step;
+            module["vl53l1x_center"] = vl53l1x_center;
+            module["vl53l1x_timeing_budget"] = vl53l1x_timeing_budget;
             
             String response;
             serializeJson(doc, response);
