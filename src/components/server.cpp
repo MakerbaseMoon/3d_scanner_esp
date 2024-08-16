@@ -95,6 +95,8 @@ void init_server() {
         char* ap_ssid = NULL;
         char* ap_password = NULL;
         char* hostname = NULL;
+        char* username = NULL;
+        char* repo = NULL;
 
         uint16_t z_axis_max = NVS_Z_AXIS_MAX_DEFAULT;
         uint16_t z_axis_start_step = NVS_Z_AXIS_START_STEP_DEFAULT;
@@ -114,8 +116,8 @@ void init_server() {
         get_module(&z_axis_max, &z_axis_start_step, &z_axis_delay_time, &z_axis_one_time_step, 
                     &x_y_axis_max, &x_y_axis_step_delay_time, &x_y_axis_one_time_step,
                     &vl53l1x_center, &vl53l1x_timeing_budget);
-
-        if (ssid != NULL && password != NULL && ap_ssid != NULL && ap_password != NULL && hostname != NULL) {
+        get_github(&username, &repo);
+        if (ssid != NULL && password != NULL && ap_ssid != NULL && ap_password != NULL && hostname != NULL && username != NULL && repo != NULL) {
             JsonDocument doc;
             doc["code"] = 200;
             doc["status"] = "ok";
@@ -128,6 +130,9 @@ void init_server() {
             JsonObject ap = data.createNestedObject("ap");
             ap["ssid"] = ap_ssid;
             ap["password"] = ap_password;
+            JsonObject github = data.createNestedObject("github");
+            github["username"] = username;
+            github["repo"] = repo;
             JsonObject module = data.createNestedObject("module");
 
             module["z_axis_max"] = z_axis_max;
@@ -156,35 +161,37 @@ void init_server() {
         if (hostname != NULL) free(hostname);
     });
 
-    server.on("/api/set/sta", HTTP_GET, [](AsyncWebServerRequest *request) {
-        String ssid = request->getParam("ssid", true)->value();
-        String password = request->getParam("password", true)->value();
-        if (ssid.length() > 0 && password.length() > 0) {
-            set_sta_wifi(ssid.c_str(), password.c_str());
-            request->send(200, "application/json", "{\"code\": 200,\"status\": \"ok\",\"path\": \"/api/set/sta\"}");
-        } else {
-            request->send(400, "application/json", "{\"code\": 400,\"status\": \"error\",\"path\": \"/api/set/sta\"}");
-        }
-    });
+    server.on("/api/set/data", HTTP_GET, [](AsyncWebServerRequest *request) {
+        try {
+            if (request->getParam("sta_ssid") != NULL && request->getParam("sta_password") != NULL) {
+                set_sta_wifi(request->getParam("sta_ssid")->value().c_str(), request->getParam("sta_password")->value().c_str());
+            }
 
-    server.on("/api/set/ap", HTTP_GET, [](AsyncWebServerRequest *request) {
-        String ssid = request->getParam("ssid", true)->value();
-        String password = request->getParam("password", true)->value();
-        if (ssid.length() > 0 && password.length() > 0) {
-            set_sta_wifi(ssid.c_str(), password.c_str());
-            request->send(200, "application/json", "{\"code\": 200,\"status\": \"ok\",\"path\": \"/api/set/ap\"}");
-        } else {
-            request->send(400, "application/json", "{\"code\": 400,\"status\": \"error\",\"path\": \"/api/set/ap\"}");
-        }
-    });
+            if (request->getParam("ap_ssid") != NULL && request->getParam("ap_password") != NULL) {
+                set_ap_wifi(request->getParam("ap_ssid")->value().c_str(), request->getParam("ap_password")->value().c_str());
+            }
 
-    server.on("/api/set/mdns", HTTP_GET, [](AsyncWebServerRequest *request) {
-        String hostname = request->getParam("hostname", true)->value();
-        if (hostname.length() > 0) {
-            set_mdns_hostname(hostname.c_str());
-            request->send(200, "application/json", "{\"code\": 200,\"status\": \"ok\",\"path\": \"/api/set/mdns\"}");
-        } else {
-            request->send(400, "application/json", "{\"code\": 400,\"status\": \"error\",\"path\": \"/api/set/mdns\"}");
+            if (request->getParam("mdns") != NULL) {
+                set_mdns_hostname(request->getParam("mdns")->value().c_str());
+            }
+
+            if (request->getParam("github_username") != NULL && request->getParam("github_repo") != NULL) {
+                set_github(request->getParam("github_username")->value().c_str(), request->getParam("github_repo")->value().c_str());
+            }
+
+            if (request->getParam("z_axis_max") != NULL && request->getParam("z_axis_start_step") != NULL && request->getParam("z_axis_delay_time") != NULL && request->getParam("z_axis_one_time_step") != NULL &&
+                request->getParam("x_y_axis_max") != NULL && request->getParam("x_y_axis_step_delay_time") != NULL && request->getParam("x_y_axis_one_time_step") != NULL &&
+                request->getParam("vl53l1x_center") != NULL && request->getParam("vl53l1x_timeing_budget") != NULL) {
+                set_module(request->getParam("z_axis_max")->value().toInt(), request->getParam("z_axis_start_step")->value().toInt(), request->getParam("z_axis_delay_time")->value().toInt(), request->getParam("z_axis_one_time_step")->value().toInt(),
+                            request->getParam("x_y_axis_max")->value().toInt(), request->getParam("x_y_axis_step_delay_time")->value().toInt(), request->getParam("x_y_axis_one_time_step")->value().toInt(),
+                            request->getParam("vl53l1x_center")->value().toInt(), request->getParam("vl53l1x_timeing_budget")->value().toInt());
+            }
+
+            request->send(200, "application/json", "{\"code\": 200,\"status\": \"ok\",\"path\": \"/api/set/data\"}");
+
+        } catch(const std::exception& e) {
+            ESP_LOGE(SERVER_TAG, "Error: %s", e.what());
+            request->send(500, "application/json", "{\"code\": 500,\"status\": \"Server Error\",\"path\": \"/api/set/data\"}");
         }
     });
 
@@ -212,6 +219,10 @@ void init_server() {
                 } else if(command == "stop") {
                     ESP_LOGD(SERVER_TAG, "Stop command");
                     set_command(SCANNER_COMMAND_STOP);
+                }  else if(command == "end") {
+                    ESP_LOGD(SERVER_TAG, "END command");
+                    set_command(SCANNER_COMMAND_STOP);
+                    set_project_name("");
                 } else if(command == "up") {
                     if (request->getParam("step") != NULL) {
                         ESP_LOGD(SERVER_TAG, "Up command, step: %d", request->getParam("step")->value().toInt());
@@ -262,16 +273,6 @@ void init_server() {
         }
 
         request->send(code, "application/json", "{\"code\": 400,\"status\": \"" + status + "\",\"path\": \"/api/set/scanner\"}");
-    });
-
-    server.on("/api/get/scanner", HTTP_GET, [](AsyncWebServerRequest *request) {
-        JsonDocument doc;
-        doc["code"] = 200;
-        doc["status"] = "ok";
-        doc["path"] = "/api/get/scanner";
-        JsonObject data = doc.createNestedObject("data");
-        data["z_axis_counter"] = get_z_axis_counter();
-        request->send(200, "application/json", doc.as<String>());
     });
 
     server.onNotFound([](AsyncWebServerRequest *request){

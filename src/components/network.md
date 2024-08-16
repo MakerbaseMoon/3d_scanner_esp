@@ -1,15 +1,17 @@
 # Server API
 
 - [AsyncWebServer](#asyncwebserver)
-  - [Get ESP32 Info](#get-esp32-info-get-post)
-  - [Set ESP32 STA SSID and Password](#set-esp32-sta-ssid-and-password-get-post)
-  - [Set ESP32 AP SSID and Password](#set-esp32-ap-ssid-and-password-get-post)
-  - [Set ESP32 mDNS and Hostname](#set-esp32-mdns-and-hostname-get-post)
+  - [Get ESP32 Info](#get-esp32-info-get)
+  - [Set ESP32 Data](#set-esp32-data-get)
+  - [Set 3D Scanner status](#set-3d-scanner-status-get)
 - [AsyncWebSocket](#asyncwebsocket)
+  - [Request data](#request-data)
+  - [Response data](#response-data)
+    - [When Stop to setting mode](#when-stop-to-setting-mode)
 
 ## AsyncWebServer
 
-## Get ESP32 Info `GET` `POST`
+## Get ESP32 Info `GET`
 
 Get ESP32 information
 
@@ -25,7 +27,7 @@ Get ESP32 information
 
 - **status codes:**
   - `200` on success
-  - `500` on nvs data error
+  - `500` on Server error
 
 - **Request example:**
 
@@ -45,17 +47,49 @@ fetch('/api/info', {
 
 ```json
 {
-    "sta_ssid": "ssid",
-    "sta_password": "password",
-    "ap_ssid": "3D Scanner",
-    "ap_password": "password",
-    "hostname": "3d-scanner",
+    "code": "200",
+    "status": "ok",
+    "path": "/api/info",
+    "data": {
+        "mdns": "3d-scanner",
+        "sta": {
+            "ssid": "ssid",
+            "password": "password",
+        },
+        "ap": {
+            "ssid": "3D Scanner",
+            "password": "password",
+        },
+        "github": {
+            "username": "MakerbaseMoon",
+            "repo": "3d_scanner_esp",
+        },
+        "module": {
+            "z_axis_max": 47000,
+            "z_axis_start_step": 0,
+            "z_axis_delay_time": 100,
+            "z_axis_one_time_step": 100,
+            "x_y_axis_max": 6400,
+            "x_y_axis_step_delay_time": 100,
+            "x_y_axis_one_time_step":32,
+            "vl53l1x_center": 110,
+            "vl53l1x_timeing_budget": 15,
+        }
+    }
 }
 ```
 
-## Set ESP32 STA SSID and Password `GET` `POST`
+```json
+{
+    "code": "500",
+    "status": "Server Error",
+    "path": "/api/info",
+}
+```
 
-Set ESP32 STA SSID and Password
+## Set ESP32 Data `GET`
+
+Set ESP32 STA SSID and Password, ESP32 AP SSID and Password, ESP32 mDNS and Hostname, 3D Scanner status
 
 ### `Headers` For ESP32 STA SSID and Password
 
@@ -63,21 +97,87 @@ Set ESP32 STA SSID and Password
 
 ### `Path` For ESP32 STA SSID and Password
 
-- **URL:** `/api/set/sta`
+- **URL:** `/api/set/data`
 
 ### `HTTP` For ESP32 STA SSID and Password
 
 - **status codes:**
   - `200` on success
-  - `400` on send data error
+  - `500` on Server error
+
+- **Request Param:**
+
+- `sta_ssid`:
+  - Type: String
+  - Note: STA SSID
+  - Need: `sta_password`
+- `sta_password`:
+  - Type: String
+  - Note: STA Password
+  - Need: `sta_ssid`
+- `ap_ssid`:
+  - Type: String
+  - Note: AP SSID
+  - Need: `ap_password`
+- `ap_password`:
+  - Type: String
+  - Note: AP Password
+  - Need: `ap_ssid`
+- `mdns`:
+  - Type: String
+  - Note: ESP32 mDNS and Hostname
+- `github_username`:
+  - Type: String
+  - Note: Github username
+  - Need: `github_repo`
+- `github_repo`:
+  - Type: String
+  - Note: Github repo
+  - Need: `github_username`
+- `z_axis_max`:
+  - Type: Number
+  - Note: Z axis max
+  - Need: **ALL Module Setting**
+- `z_axis_start_step`:
+  - Type: Number
+  - Note: Z axis start step
+  - Need: **ALL Module Setting**
+- `z_axis_delay_time`:
+  - Type: Number
+  - Note: Z axis delay time
+  - Need: **ALL Module Setting**
+- `z_axis_one_time_step`:
+  - Type: Number
+  - Note: Z axis one time step
+  - Need: **ALL Module Setting**
+- `x_y_axis_max`:
+  - Type: Number
+  - Note: X Y axis max
+  - Need: **ALL Module Setting**
+- `x_y_axis_step_delay_time`:
+  - Type: Number
+  - Note: X Y axis step delay time
+  - Need: **ALL Module Setting**
+- `x_y_axis_one_time_step`:
+  - Type: Number
+  - Note: X Y axis one time step
+  - Need: **ALL Module Setting**
+- `vl53l1x_center`:
+  - Type: Number
+  - Note: VL53L1X center
+  - Need: **ALL Module Setting**
+- `vl53l1x_timeing_budget`:
+  - Type: Number
+  - Note: VL53L1X timeing budget
+  - Need: **ALL Module Setting**
 
 - **Request example:**
 
 `GET`:
 
 ```js
-fetch('/api/set/sta?ssid=<ssid>&password=<password>', {
-    method: 'POST',
+fetch('/api/set/data?sta_ssid=<sta_ssid>&sta_password=<sta_password>&ap_ssid=<ap_ssid>&ap_password=<ap_password>&mdns=<mdns>&github_username=<github_username>&github_repo=<github_repo>&z_axis_max=<z_axis_max>&z_axis_start_step=<z_axis_start_step>&z_axis_delay_time=<z_axis_delay_time>&z_axis_one_time_step=<z_axis_one_time_step>&x_y_axis_max=<x_y_axis_max>&x_y_axis_step_delay_time=<x_y_axis_step_delay_time>&x_y_axis_one_time_step=<x_y_axis_one_time_step>&vl53l1x_center=<vl53l1x_center>&vl53l1x_timeing_budget=<vl53l1x_timeing_budget>', {
+    method: 'GET',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -87,175 +187,7 @@ fetch('/api/set/sta?ssid=<ssid>&password=<password>', {
 .catch((error) => console.error(error));
 ```
 
-`POST`:
-
-```js
-fetch('/api/set/sta', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: "ssid=<ssid>&password=<password>",
-})
-.then((response) => response.json())
-.then((data) => console.log(data))
-.catch((error) => console.error(error));
-```
-
-- **Response example:**
-
-```json
-{
-    "code": "200",
-    "status": "ok",
-    "path": "/api/set/sta",
-}
-```
-
-```json
-{
-    "code": "400",
-    "status": "error",
-    "path": "/api/set/ap",
-}
-```
-
-## Set ESP32 AP SSID and Password `GET` `POST`
-
-Set ESP32 AP SSID and Password
-
-### `Headers` For ESP32 AP SSID and Password
-
-- `Content-Type: application/json`
-
-### `Path` For ESP32 AP SSID and Password
-
-- **URL:** `/api/ap`
-
-### `HTTP` For ESP32 AP SSID and Password
-
-- **status codes:**
-  - `200` on success
-  - `400` on send data error
-
-- **Request example:**
-
-`GET`:
-
-```js
-fetch('/api/set/ap?ssid=<ssid>&password=<password>', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-})
-.then((response) => response.json())
-.then((data) => console.log(data))
-.catch((error) => console.error(error));
-```
-
-`POST`:
-
-```js
-fetch('/api/set/ap', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: "ssid=<ssid>&password=<password>",
-})
-.then((response) => response.json())
-.then((data) => console.log(data))
-.catch((error) => console.error(error));
-```
-
-- **Response example:**
-
-```json
-{
-    "code": "200",
-    "status": "ok",
-    "path": "/api/set/ap",
-}
-```
-
-```json
-{
-    "code": "400",
-    "status": "error",
-    "path": "/api/set/ap",
-}
-```
-
-## Set ESP32 mDNS and Hostname `GET` `POST`
-
-Set ESP32 hostname
-
-### `Headers` For ESP32 mDNS and Hostname
-
-- `Content-Type: application/json`
-
-### `Path` For ESP32 mDNS and Hostname
-
-- **URL:** `/api/set/mdns`
-
-### `HTTP` For ESP32 mDNS and Hostname
-
-- **status codes:**
-  - `200` on success
-  - `400` on send data error
-
-- **Request example:**
-
-`GET`:
-
-```js
-
-fetch('/api/set/mdns?hostname=<hostname>', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-})
-.then((response) => response.json())
-.then((data) => console.log(data))
-.catch((error) => console.error(error));
-```
-
-`POST`:
-
-```js
-fetch('/api/set/mdns', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: "hostname=<hostname>",
-})
-.then((response) => response.json())
-.then((data) => console.log(data))
-.catch((error) => console.error(error));
-```
-
-- **Response example:**
-
-```json
-{
-    "code": "200",
-    "status": "ok",
-    "path": "/api/set/mdns",
-}
-```
-
-```json
-{
-    "code": "400",
-    "status": "error",
-    "path": "/api/set/mdns",
-}
-```
-
-## Set 3D Scanner status `GET` `POST`
+## Set 3D Scanner status `GET`
 
 Set 3D Scanner status
 
@@ -271,15 +203,34 @@ Set 3D Scanner status
 
 - **status codes:**
   - `200` on success
-  - `400` on send data error
+  - `400` on command or param error
+  - `500` on Server error
+
+- **Request Param:**
+
+- `command`:
+  - Type: String
+  - Note: 3D Scanner status
+  - Value: `home`, `new`, `start`, `stop`, `end`, `up`, `down`, `left`, `right`
+
+- Value for `new`:
+  - `name`:
+    - Type: String
+    - Note: 3D Scanner name
+
+- Value for `up`, `down`, `left`, `right`:
+  - `step`:
+    - Type: Number
+    - Note: 3D Scanner step
+    - default: 1
 
 - **Request example:**
 
 `GET`:
 
 ```js
-fetch('/api/set/scanner?status=<status>', {
-    method: 'POST',
+fetch('/api/set/scanner?command=<command>', {
+    method: 'GET',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -289,15 +240,28 @@ fetch('/api/set/scanner?status=<status>', {
 .catch((error) => console.error(error));
 ```
 
-`POST`:
-
+`New`
+  
 ```js
-fetch('/api/set/scanner', {
-    method: 'POST',
+fetch('/api/set/scanner?command=new&name=<name>', {
+    method: 'GET',
     headers: {
         'Content-Type': 'application/json',
     },
-    body: "status=<status>",
+})
+.then((response) => response.json())
+.then((data) => console.log(data))
+.catch((error) => console.error(error));
+```
+
+`Up`, `Down`, `Left`, `Right`
+
+```js
+fetch('/api/set/scanner?command=<command>&step=<step>', {
+    method: 'GET',
+    headers: {
+        'Content-Type': 'application/json',
+    },
 })
 .then((response) => response.json())
 .then((data) => console.log(data))
@@ -306,7 +270,45 @@ fetch('/api/set/scanner', {
 
 ## AsyncWebSocket
 
-`data`:
+### `Request data`
+
+- `command`:
+  - Type: String
+  - Note: 3D Scanner status
+  - Value: `home`, `new`, `start`, `stop`, `end`, `up`, `down`, `left`, `right`
+
+- Value for `new`:
+  - `name`:
+    - Type: String
+    - Note: 3D Scanner name
+
+- Value for `up`, `down`, `left`, `right`:
+  - `step`:
+    - Type: Number
+    - Note: 3D Scanner step
+    - default: 1
+
+```json
+{
+    "command": "home",
+}
+```
+
+```json
+{
+    "command": "new",
+    "name": "3d-1",
+}
+```
+
+```json
+{
+    "command": "up",
+    "step": 10000,
+}
+```
+
+### `Response data`
 
 ```json
 {
@@ -316,5 +318,14 @@ fetch('/api/set/scanner', {
     "points": [
         [x, y, z]
     ]
+}
+```
+
+### When Stop to setting mode
+
+```json
+{
+    "z_steps": 0,
+    "vl53l1x": 0,
 }
 ```
