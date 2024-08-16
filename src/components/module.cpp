@@ -32,6 +32,7 @@ String message = "";
 uint64_t msg_len = 0;
 
 unsigned long start_time = 0;
+unsigned long last_send_data_time = 0;
 
 void writeFile(fs::FS &fs, const char * path, const char * message);
 void appendFile(fs::FS &fs, const char * path, const char * message);
@@ -166,7 +167,19 @@ void x_y_axis_motor_step(bool direction) {
 
 void scanner_loop() {
     if (_command == SCANNER_COMMAND_STOP) {
-
+        if (millis() - last_send_data_time > SEND_DATA_TIME_MS) {
+            last_send_data_time = millis();
+            String send_msg = "{\"z_steps\":\"" + String(z_steps);
+            while (vl53_ready) {
+                if (vl53.dataReady()) {
+                    send_msg += "\",\"vl53l1x\":" + String(vl53.distance());
+                    break;
+                }
+            }
+            send_msg += "}";
+            ws_send_text(send_msg.c_str());
+            message = "";
+        }
         delay(100);
     } else if (_command == SCANNER_COMMAND_HOME) {
         ESP_LOGD(MODULE_TAG, "Home command");
