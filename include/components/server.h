@@ -4,7 +4,6 @@
 
 #include <Arduino.h>
 
-#include <SPIFFS.h>
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
 #include <AsyncWebSocket.h>
@@ -12,6 +11,7 @@
 
 #include "components/data.h"
 #include "components/module.h"
+#include "website.h"
 
 #define SERVER_TAG_NAME "server"
 
