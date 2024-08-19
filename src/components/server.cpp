@@ -269,7 +269,7 @@ void init_server() {
             status = e.what();
         }
 
-        request->send(code, "application/json", "{\"code\": 400,\"status\": \"" + status + "\",\"path\": \"/api/set/scanner\"}");
+        request->send(code, "application/json", "{\"code\":" + String(code) + ",\"status\": \"" + status + "\",\"path\": \"/api/set/scanner\"}");
     });
 
     server.onNotFound([](AsyncWebServerRequest *request){
