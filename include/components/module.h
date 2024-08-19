@@ -10,6 +10,8 @@
 #include <Wire.h>
 
 #include <math.h>
+#include <vector>
+#include <unordered_map>
 
 #include "esp_log.h"
 

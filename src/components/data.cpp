@@ -363,7 +363,7 @@ void get_github(char** username, char** repo) {
 }
 
 void set_module(uint16_t z_axis_max, uint16_t z_axis_start_step, uint16_t z_axis_delay_time, uint16_t z_axis_one_time_step, 
-                uint16_t x_y_axis_max, uint16_t x_y_axis_step_delay_time, uint16_t x_y_axis_one_time_step,
+                uint16_t x_y_axis_max, uint16_t x_y_axis_check_times, uint16_t x_y_axis_step_delay_time, uint16_t x_y_axis_one_time_step,
                 uint16_t vl53l1x_center, uint16_t vl53l1x_timeing_budget) {
     nvs_handle_t nvs_handle;
     esp_err_t err = nvs_open(NVS_STORAGE, NVS_READWRITE, &nvs_handle);
@@ -390,6 +390,10 @@ void set_module(uint16_t z_axis_max, uint16_t z_axis_start_step, uint16_t z_axis
         if (err != ESP_OK) {
             ESP_LOGE(NVS_TAG, "Error (%s) writing X Y axis max to NVS", esp_err_to_name(err));
         }
+        err = nvs_set_u16(nvs_handle, NVS_X_Y_AXIS_CHECK_TIMES, x_y_axis_check_times);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) writing X Y axis check times to NVS", esp_err_to_name(err));
+        }
         err = nvs_set_u16(nvs_handle, NVS_X_Y_AXIS_STEP_DELAY_TIME, x_y_axis_step_delay_time);
         if (err != ESP_OK) {
             ESP_LOGE(NVS_TAG, "Error (%s) writing X Y axis step delay time to NVS", esp_err_to_name(err));
@@ -412,7 +416,7 @@ void set_module(uint16_t z_axis_max, uint16_t z_axis_start_step, uint16_t z_axis
 }
 
 void get_module(uint16_t* z_axis_max, uint16_t* z_axis_start_step, uint16_t* z_axis_delay_time, uint16_t* z_axis_one_time_step, 
-                uint16_t* x_y_axis_max, uint16_t* x_y_axis_step_delay_time, uint16_t* x_y_axis_one_time_step,
+                uint16_t* x_y_axis_max, uint16_t* x_y_axis_check_times, uint16_t* x_y_axis_step_delay_time, uint16_t* x_y_axis_one_time_step,
                 uint16_t* vl53l1x_center, uint16_t* vl53l1x_timeing_budget) {
     nvs_handle_t nvs_handle;
     esp_err_t err = nvs_open(NVS_STORAGE, NVS_READONLY, &nvs_handle);
@@ -443,6 +447,11 @@ void get_module(uint16_t* z_axis_max, uint16_t* z_axis_start_step, uint16_t* z_a
         if (err != ESP_OK) {
             ESP_LOGE(NVS_TAG, "Error (%s) reading X Y axis max from NVS", esp_err_to_name(err));
             *x_y_axis_max = NVS_X_Y_AXIS_MAX_DEFAULT;
+        }
+        err = nvs_get_u16(nvs_handle, NVS_X_Y_AXIS_CHECK_TIMES, x_y_axis_check_times);
+        if (err != ESP_OK) {
+            ESP_LOGE(NVS_TAG, "Error (%s) reading X Y axis check times from NVS", esp_err_to_name(err));
+            *x_y_axis_check_times = NVS_X_Y_AXIS_CHECK_TIMES_DEFAULT;
         }
         err = nvs_get_u16(nvs_handle, NVS_X_Y_AXIS_STEP_DELAY_TIME, x_y_axis_step_delay_time);
         if (err != ESP_OK) {

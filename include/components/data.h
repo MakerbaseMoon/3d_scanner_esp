@@ -49,17 +49,19 @@
 #define NVS_Z_AXIS_ONE_TIME_STEP_DEFAULT 100
 
 #define NVS_X_Y_AXIS_MAX             "x_y_axis_max"
+#define NVS_X_Y_AXIS_CHECK_TIMES     "x_y_axis_check_times"
 #define NVS_X_Y_AXIS_STEP_DELAY_TIME "x_y_axis_step_delay_time"
 #define NVS_X_Y_AXIS_ONE_TIME_STEP   "x_y_axis_one_time_step"
 
 #define NVS_X_Y_AXIS_MAX_DEFAULT             6400
+#define NVS_X_Y_AXIS_CHECK_TIMES_DEFAULT       20
 #define NVS_X_Y_AXIS_STEP_DELAY_TIME_DEFAULT  100
-#define NVS_X_Y_AXIS_ONE_TIME_STEP_DEFAULT     32
+#define NVS_X_Y_AXIS_ONE_TIME_STEP_DEFAULT     16
 
 #define NVS_VL53L1X_CENTER         "vl53l1x_center"
 #define NVS_VL53L1X_TIMEING_BUDGET "vl53l1x_timeing_budget"
 
-#define NVS_VL53L1X_CENTER_DEFAULT           110
+#define NVS_VL53L1X_CENTER_DEFAULT            70
 // Valid timing budgets: 15, 20, 33, 50, 100, 200 and 500ms!
 #define NVS_VL53L1X_TIMEING_BUDGET_DEFAULT    15 
 
@@ -80,10 +82,10 @@ void set_github(const char* username, const char* repo);
 void get_github(char** username, char** repo);
 
 void set_module(uint16_t z_axis_max, uint16_t z_axis_start_step, uint16_t z_axis_delay_time, uint16_t z_axis_one_time_step, 
-                uint16_t x_y_axis_max, uint16_t x_y_axis_step_delay_time, uint16_t x_y_axis_one_time_step,
+                uint16_t x_y_axis_max, uint16_t x_y_axis_check_times, uint16_t x_y_axis_step_delay_time, uint16_t x_y_axis_one_time_step,
                 uint16_t vl53l1x_center, uint16_t vl53l1x_timeing_budget);
 void get_module(uint16_t* z_axis_max, uint16_t* z_axis_start_step, uint16_t* z_axis_delay_time, uint16_t* z_axis_one_time_step, 
-                uint16_t* x_y_axis_max, uint16_t* x_y_axis_step_delay_time, uint16_t* x_y_axis_one_time_step,
+                uint16_t* x_y_axis_max, uint16_t* x_y_axis_check_times, uint16_t* x_y_axis_step_delay_time, uint16_t* x_y_axis_one_time_step,
                 uint16_t* vl53l1x_center, uint16_t* vl53l1x_timeing_budget);
 
 #endif // __3D_SCANNER_DATA_H__

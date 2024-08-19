@@ -99,6 +99,7 @@ void init_server() {
         uint16_t z_axis_one_time_step = NVS_Z_AXIS_ONE_TIME_STEP_DEFAULT;
 
         uint16_t x_y_axis_max = NVS_X_Y_AXIS_MAX_DEFAULT;
+        uint16_t x_y_axis_check_times = NVS_X_Y_AXIS_CHECK_TIMES_DEFAULT;
         uint16_t x_y_axis_step_delay_time = NVS_X_Y_AXIS_STEP_DELAY_TIME_DEFAULT;
         uint16_t x_y_axis_one_time_step = NVS_X_Y_AXIS_ONE_TIME_STEP_DEFAULT;
 
@@ -109,7 +110,7 @@ void init_server() {
         get_ap_wifi(&ap_ssid, &ap_password);
         get_mdns_hostname(&hostname);
         get_module(&z_axis_max, &z_axis_start_step, &z_axis_delay_time, &z_axis_one_time_step, 
-                    &x_y_axis_max, &x_y_axis_step_delay_time, &x_y_axis_one_time_step,
+                    &x_y_axis_max, &x_y_axis_check_times, &x_y_axis_step_delay_time, &x_y_axis_one_time_step,
                     &vl53l1x_center, &vl53l1x_timeing_budget);
         get_github(&username, &repo);
         if (ssid != NULL && password != NULL && ap_ssid != NULL && ap_password != NULL && hostname != NULL && username != NULL && repo != NULL) {
@@ -135,6 +136,7 @@ void init_server() {
             module["z_axis_delay_time"] = z_axis_delay_time;
             module["z_axis_one_time_step"] = z_axis_one_time_step;
             module["x_y_axis_max"] = x_y_axis_max;
+            module["x_y_axis_check_times"] = x_y_axis_check_times;
             module["x_y_axis_step_delay_time"] = x_y_axis_step_delay_time;
             module["x_y_axis_one_time_step"] = x_y_axis_one_time_step;
             module["vl53l1x_center"] = vl53l1x_center;
@@ -175,10 +177,10 @@ void init_server() {
             }
 
             if (request->getParam("z_axis_max") != NULL && request->getParam("z_axis_start_step") != NULL && request->getParam("z_axis_delay_time") != NULL && request->getParam("z_axis_one_time_step") != NULL &&
-                request->getParam("x_y_axis_max") != NULL && request->getParam("x_y_axis_step_delay_time") != NULL && request->getParam("x_y_axis_one_time_step") != NULL &&
+                request->getParam("x_y_axis_max") != NULL && request->getParam("x_y_axis_check_times")  && request->getParam("x_y_axis_step_delay_time") != NULL && request->getParam("x_y_axis_one_time_step") != NULL &&
                 request->getParam("vl53l1x_center") != NULL && request->getParam("vl53l1x_timeing_budget") != NULL) {
                 set_module(request->getParam("z_axis_max")->value().toInt(), request->getParam("z_axis_start_step")->value().toInt(), request->getParam("z_axis_delay_time")->value().toInt(), request->getParam("z_axis_one_time_step")->value().toInt(),
-                            request->getParam("x_y_axis_max")->value().toInt(), request->getParam("x_y_axis_step_delay_time")->value().toInt(), request->getParam("x_y_axis_one_time_step")->value().toInt(),
+                            request->getParam("x_y_axis_max")->value().toInt(), request->getParam("x_y_axis_check_times")->value().toInt(), request->getParam("x_y_axis_step_delay_time")->value().toInt(), request->getParam("x_y_axis_one_time_step")->value().toInt(),
                             request->getParam("vl53l1x_center")->value().toInt(), request->getParam("vl53l1x_timeing_budget")->value().toInt());
             }
 
