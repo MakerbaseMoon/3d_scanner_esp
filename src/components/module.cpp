@@ -11,6 +11,7 @@ uint16_t z_axis_delay_time = NVS_Z_AXIS_DELAY_TIME_DEFAULT;
 uint16_t z_axis_one_time_step = NVS_Z_AXIS_ONE_TIME_STEP_DEFAULT;
 
 uint16_t x_y_axis_max = NVS_X_Y_AXIS_MAX_DEFAULT;
+uint16_t x_y_axis_check_times = NVS_X_Y_AXIS_CHECK_TIMES_DEFAULT;
 uint16_t x_y_axis_step_delay_time = NVS_X_Y_AXIS_STEP_DELAY_TIME_DEFAULT;
 uint16_t x_y_axis_one_time_step = NVS_X_Y_AXIS_ONE_TIME_STEP_DEFAULT;
 
@@ -37,12 +38,32 @@ unsigned long last_send_data_time = 0;
 void writeFile(fs::FS &fs, const char * path, const char * message);
 void appendFile(fs::FS &fs, const char * path, const char * message);
 
+uint16_t findMode(const std::vector<uint16_t>& numbers) {
+    std::unordered_map<uint16_t, uint16_t> frequencyMap;
+
+    for (uint16_t num : numbers) {
+        frequencyMap[num]++;
+    }
+
+    uint16_t mode = numbers[0];
+    uint16_t maxCount = 0;
+
+    for (const auto& pair : frequencyMap) {
+        if (pair.second > maxCount) {
+            maxCount = pair.second;
+            mode = pair.first;
+        }
+    }
+
+    return mode;
+}
+
 void module_data_init() {
     get_module( &z_axis_max, &z_axis_start_step, &z_axis_delay_time, &z_axis_one_time_step, 
-                &x_y_axis_max, &x_y_axis_step_delay_time, &x_y_axis_one_time_step,
+                &x_y_axis_max, &x_y_axis_check_times, &x_y_axis_step_delay_time, &x_y_axis_one_time_step,
                 &vl53l1x_center, &vl53l1x_timeing_budget);
     ESP_LOGD(MODULE_TAG, "Z axis max: %u, start step: %u, delay time: %u, one time step: %u", z_axis_max, z_axis_start_step, z_axis_delay_time, z_axis_one_time_step);
-    ESP_LOGD(MODULE_TAG, "X Y axis max: %u, step delay time: %u, one time step: %u", x_y_axis_max, x_y_axis_step_delay_time, x_y_axis_one_time_step);
+    ESP_LOGD(MODULE_TAG, "X Y axis max: %u, check times: %u, step delay time: %u, one time step: %u", x_y_axis_max, x_y_axis_check_times, x_y_axis_step_delay_time, x_y_axis_one_time_step);
     ESP_LOGD(MODULE_TAG, "VL53L1X center: %u, timing budget: %u", vl53l1x_center, vl53l1x_timeing_budget);
 }
 
@@ -86,7 +107,9 @@ void vl53_init() {
         ESP_LOGE(MODULE_TAG, "Failed to boot VL53L1X: ", vl53.vl_status);
         vl53.end();
         return;
-    } 
+    }
+
+    // vl53.VL53L1X_SetDistanceThreshold(40, 142, 2, 1);
 
     if (!vl53.startRanging()) {
         ESP_LOGE(MODULE_TAG, "Failed to start VL53L1X ranging: ", vl53.vl_status);
@@ -172,13 +195,23 @@ void scanner_loop() {
             String send_msg = "{\"z_steps\":\"" + String(z_steps);
             while (vl53_ready) {
                 if (vl53.dataReady()) {
-                    send_msg += "\",\"vl53l1x\":" + String(vl53.distance());
+                    uint32_t distance;
+                    uint8_t status;
+                    vl53.startRanging();
+                    vl53.VL53L1X_GetRangeStatus(&status);
+                    if(vl53.GetDistance(&distance) == 0) {
+                        send_msg += "\",\"vl53l1x\":" + String(distance);
+                    } else {
+                        send_msg += "\",\"vl53l1x\":-1";
+                    }
+                    Serial.printf("status: %u\n", status);
                     break;
                 }
             }
             send_msg += "}";
             ws_send_text(send_msg.c_str());
             message = "";
+            Serial.println(send_msg);
         }
         delay(100);
     } else if (_command == SCANNER_COMMAND_HOME) {
@@ -194,29 +227,36 @@ void scanner_loop() {
         for (uint16_t i = 0; i < x_y_axis_one_time_step; i++) {
             x_y_axis_motor_step(HIGH);
         }
-        while(vl53_ready) {
-            if( vl53.dataReady()) {
-                float angle = x_y_steps * MOTOR1_DEFAULT_MICRO_STEP_DEGREE; // 1 / 32 steps, 1.8 degree per step
-                double r = double(vl53l1x_center) - double(vl53.distance());
-                vl53.clearInterrupt();
-                double x = r * cos(angle * PI / 180);
-                double y = r * sin(angle * PI / 180);
-                ESP_LOGI(MODULE_TAG, "Time: %.4f, angle: %.5f, x_y_steps: %u, z_steps: %u", ((millis() - start_time) / 1000.0), angle, x_y_steps, z_steps);
-                ESP_LOGI(MODULE_TAG, "R: %.2f, X: %.5f, Y: %.5f, Z: %.5f", r, x, y, z_steps * Z_AXIS_STEP_MM);
-                Serial.printf("%.5f, %.5f, %.5f\n", x, y, z_steps * Z_AXIS_STEP_MM);
-                message += "[" + String(x * 0.01) + "," + String(y * 0.01) + "," + String(z_steps * Z_AXIS_STEP_FLOAT) + "]";
-                if (( msg_len++ % 10 ) == 0) {
-                    if (sd_card_ready) {
-                        // appendFile(SD, ("/" + project_name + ".csv").c_str() , message.c_str());
-                    }
-                    String send_msg = "{\"name\":\"" + project_name + "\",\"points_count\":" + String(msg_len) + ",\"is_last\":false,\"points\":[" + message + "]}";
-                    ws_send_text(send_msg.c_str());
-                    message = "";
-                } else {
-                    message += ",";
+        if(vl53_ready) {
+            std::vector<uint16_t> distances;
+            for (uint16_t i = 0; i < x_y_axis_check_times; i++) {
+                while(!vl53.dataReady()) {
+                    delay(10);
                 }
-                break;
+                distances.push_back(vl53.distance());
+                vl53.clearInterrupt();
             }
+            uint16_t distance = findMode(distances);
+
+            float angle = x_y_steps * MOTOR1_DEFAULT_MICRO_STEP_DEGREE; // 1 / 32 steps, 1.8 degree per step
+            double r = double(vl53l1x_center) - double(distance);
+            double x = r * cos(angle * PI / 180);
+            double y = r * sin(angle * PI / 180);
+            ESP_LOGI(MODULE_TAG, "Time: %.4f, angle: %.5f, x_y_steps: %u, z_steps: %u", ((millis() - start_time) / 1000.0), angle, x_y_steps, z_steps);
+            ESP_LOGI(MODULE_TAG, "R: %.2f, X: %.5f, Y: %.5f, Z: %.5f", r, x, y, z_steps * Z_AXIS_STEP_MM);
+            Serial.printf("%.5f, %.5f, %.5f\n", x, y, z_steps * Z_AXIS_STEP_MM);
+            message += "[" + String(x * 0.01) + "," + String(y * 0.01) + "," + String(z_steps * Z_AXIS_STEP_FLOAT) + "]";
+            if (( msg_len++ % 10 ) == 0) {
+                if (sd_card_ready) {
+                    // appendFile(SD, ("/" + project_name + ".csv").c_str() , message.c_str());
+                }
+                String send_msg = "{\"name\":\"" + project_name + "\",\"points_count\":" + String(msg_len) + ",\"is_last\":false,\"points\":[" + message + "]}";
+                ws_send_text(send_msg.c_str());
+                message = "";
+            } else {
+                message += ",";
+            }
+
         }
 
         x_y_steps+=x_y_axis_one_time_step;
