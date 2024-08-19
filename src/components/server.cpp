@@ -80,14 +80,9 @@ void message(const char* message) {
 }
 
 void init_server() {
-    if(!SPIFFS.begin(true)){
-        Serial.println("An Error has occurred while mounting SPIFFS");
-        return;
-    }
-    
     DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");
 
-    server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+    WEBSITE
 
     server.on("/api/info", HTTP_GET, [](AsyncWebServerRequest *request) {
         char* ssid = NULL;
