@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 
+#include "components/ota.h"
 #include "components/data.h"
 #include "components/network.h"
 #include "components/server.h"

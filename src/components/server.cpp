@@ -272,6 +272,21 @@ void init_server() {
         request->send(code, "application/json", "{\"code\":" + String(code) + ",\"status\": \"" + status + "\",\"path\": \"/api/set/scanner\"}");
     });
 
+    server.on("/api/ota", HTTP_GET, [](AsyncWebServerRequest *request) {
+        try{
+            if (request->getParam("username") != NULL && request->getParam("repo") != NULL && request->getParam("id") != NULL) {
+                flash_firmware(request->getParam("username")->value().c_str(), request->getParam("repo")->value().c_str(), request->getParam("asset_id")->value().toInt());
+                request->send(200, "application/json", "{\"code\": 200,\"status\": \"ok\",\"path\": \"/api/ota\"}");
+            } else {
+                request->send(400, "application/json", "{\"code\": 400,\"status\": \"param not found\",\"path\": \"/api/ota\"}");
+            }
+        }
+        catch(const std::exception& e) {
+            ESP_LOGE(SERVER_TAG, "Error: %s", e.what());
+            request->send(500, "application/json", "{\"code\": 500,\"status\": \"Server Error\",\"path\": \"/api/ota\"}");
+        }
+    });
+
     server.onNotFound([](AsyncWebServerRequest *request){
         request->send(404, "text/plain", "404 NOT Found!");
     });

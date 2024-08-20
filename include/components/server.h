@@ -9,6 +9,7 @@
 #include <AsyncWebSocket.h>
 #include <ESPAsyncWebServer.h>
 
+#include "components/ota.h"
 #include "components/data.h"
 #include "components/module.h"
 #include "website.h"
