@@ -6,6 +6,7 @@
 
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <DNSServer.h>
 
 #include <string.h>
 

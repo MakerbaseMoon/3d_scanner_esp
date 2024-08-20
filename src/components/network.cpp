@@ -17,6 +17,8 @@ IPAddress AP_local_ip(192, 168, 4, 1);
 IPAddress AP_gateway(192, 168, 4, 1);
 IPAddress AP_subnet(255, 255, 255, 0);
 
+DNSServer dnsServer;
+
 void set_ap_name(const char* name);
 
 /**
@@ -77,4 +79,6 @@ void init_network() {
                 break;
         }
     });
+
+    dnsServer.start(53, "*", AP_local_ip);
 }
