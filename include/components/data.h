@@ -15,15 +15,31 @@
 
 #define NVS_STA_SSID             "sta_ssid"
 #define NVS_STA_PASSWORD         "sta_password"
+#ifdef CONFIG_ESP_WIFI_SSID
+#define NVS_STA_SSID_DEFAULT     CONFIG_ESP_WIFI_SSID
+#else
 #define NVS_STA_SSID_DEFAULT     "ssid"
+#endif
+#ifdef CONFIG_ESP_WIFI_PASSWORD
+#define NVS_STA_PASSWORD_DEFAULT CONFIG_ESP_WIFI_PASSWORD
+#else
 #define NVS_STA_PASSWORD_DEFAULT "password"
+#endif
 
 // AP WiFi
 
 #define NVS_AP_SSID             "ap_ssid"
 #define NVS_AP_PASSWORD         "ap_password"
+#ifdef CONFIG_ESP_WIFI_AP_SSID
+#define NVS_AP_SSID_DEFAULT     CONFIG_ESP_WIFI_AP_SSID
+#else
 #define NVS_AP_SSID_DEFAULT     "3D Scanner"
+#endif
+#ifdef CONFIG_ESP_WIFI_AP_PASSWORD
+#define NVS_AP_PASSWORD_DEFAULT CONFIG_ESP_WIFI_AP_PASSWORD
+#else
 #define NVS_AP_PASSWORD_DEFAULT "password"
+#endif
 
 // mDNS
 
