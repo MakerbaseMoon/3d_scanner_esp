@@ -41,15 +41,15 @@ unsigned long last_send_data_time = 0;
 void writeFile(fs::FS &fs, const char * path, const char * message);
 void appendFile(fs::FS &fs, const char * path, const char * message);
 
-uint16_t findMode(const std::vector<uint16_t>& numbers) {
-    std::unordered_map<uint16_t, uint16_t> frequencyMap;
+int16_t findMode(const std::vector<int16_t>& numbers) {
+    std::unordered_map<int16_t, int16_t> frequencyMap;
 
-    for (uint16_t num : numbers) {
+    for (int16_t num : numbers) {
         frequencyMap[num]++;
     }
 
-    uint16_t mode = numbers[0];
-    uint16_t maxCount = 0;
+    int16_t mode = numbers[0];
+    int16_t maxCount = 0;
 
     for (const auto& pair : frequencyMap) {
         if (pair.second > maxCount) {
@@ -68,8 +68,8 @@ void module_data_init() {
     ESP_LOGD(MODULE_TAG, "Z axis max: %u, start step: %u, delay time: %u, one time step: %u", z_axis_max, z_axis_start_step, z_axis_delay_time, z_axis_one_time_step);
     ESP_LOGD(MODULE_TAG, "X Y axis max: %u, check times: %u, step delay time: %u, one time step: %u", x_y_axis_max, x_y_axis_check_times, x_y_axis_step_delay_time, x_y_axis_one_time_step);
     ESP_LOGD(MODULE_TAG, "VL53L1X center: %u, timing budget: %u", vl53l1x_center, vl53l1x_timeing_budget);
-    distance_max = vl53l1x_center + 50;
-    distance_min = vl53l1x_center - 50;
+    distance_max = vl53l1x_center + 70;
+    distance_min = vl53l1x_center - 70;
 }
 
 void motor_init() {
@@ -230,22 +230,24 @@ void scanner_loop() {
             x_y_axis_motor_step(HIGH);
         }
         if(vl53_ready) {
-            std::vector<uint16_t> distances;
-            for (uint16_t i = 0; i < x_y_axis_check_times; i++) {
-                while(!vl53.dataReady()) { delay(3); }
+            std::vector<int16_t> distances;
+            int count = 0;
+            while(count < x_y_axis_check_times) {
+                while(!vl53.dataReady()) { delay(20); }
                 int16_t distance = vl53.distance();
-                if (distance > distance_min && distance < distance_max) {
-                    distances.push_back(distance);
-                    vl53.clearInterrupt();
-                } else {
-                    i--;
+                Serial.printf("Distance: %d\n", distance);
+                if (distance < distance_min || distance > distance_max) {
+                    continue;
                 }
-                
+                distances.push_back(distance);
+                vl53.clearInterrupt();
+                count++;
             }
-            uint16_t distance = findMode(distances);
+
+            int16_t distanceMode = findMode(distances);
 
             float angle = x_y_steps * MOTOR1_DEFAULT_MICRO_STEP_DEGREE; // 1 / 32 steps, 1.8 degree per step
-            double r = fabs(double(vl53l1x_center) - double(distance));
+            double r = fabs(double(vl53l1x_center) - double(distanceMode));
             double x = r * cos(angle * PI / 180);
             double y = r * sin(angle * PI / 180);
             ESP_LOGI(MODULE_TAG, "Time: %.4f, angle: %.5f, x_y_steps: %u, z_steps: %u", ((millis() - start_time) / 1000.0), angle, x_y_steps, z_steps);
@@ -256,7 +258,7 @@ void scanner_loop() {
                 if (sd_card_ready) {
                     appendFile(SD, ("/" + project_name + ".csv").c_str() , message.c_str());
                 }
-                String send_msg = "{\"name\":\"" + project_name + "\",\"points_count\":" + String(msg_len) + ",\"is_last\":false,\"status\":scan,\"points\":[" + message + "]}";
+                String send_msg = "{\"name\":\"" + project_name + "\",\"points_count\":" + String(msg_len) + ",\"is_last\":false,\"status\":\"scan\",\"points\":[" + message + "]}";
                 ws_send_text(send_msg.c_str());
                 message = "";
             } else {
