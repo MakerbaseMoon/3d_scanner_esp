@@ -196,7 +196,7 @@ void scanner_loop() {
     if (_command == SCANNER_COMMAND_STOP) {
         if (millis() - last_send_data_time > SEND_DATA_TIME_MS) {
             last_send_data_time = millis();
-            String send_msg = "{\"z_steps\":\"" + String(z_steps);
+            String send_msg = "{\"z_steps\":" + String(z_steps);
             while (vl53_ready) {
                 if (vl53.dataReady()) {
                     uint32_t distance;
@@ -204,14 +204,14 @@ void scanner_loop() {
                     vl53.startRanging();
                     vl53.VL53L1X_GetRangeStatus(&status);
                     if(vl53.GetDistance(&distance) == 0) {
-                        send_msg += "\",\"vl53l1x\":" + String(distance);
+                        send_msg += ",\"vl53l1x\":" + String(distance);
                     } else {
-                        send_msg += "\",\"vl53l1x\":-1";
+                        send_msg += ",\"vl53l1x\":-1";
                     }
                     break;
                 }
             }
-            send_msg += "}";
+            send_msg += ",\"name\":\"" + project_name + "\",\"status\":\"stop\"}";
             ws_send_text(send_msg.c_str());
             message = "";
         }
@@ -256,7 +256,7 @@ void scanner_loop() {
                 if (sd_card_ready) {
                     appendFile(SD, ("/" + project_name + ".csv").c_str() , message.c_str());
                 }
-                String send_msg = "{\"name\":\"" + project_name + "\",\"points_count\":" + String(msg_len) + ",\"is_last\":false,\"points\":[" + message + "]}";
+                String send_msg = "{\"name\":\"" + project_name + "\",\"points_count\":" + String(msg_len) + ",\"is_last\":false,\"status\":scan,\"points\":[" + message + "]}";
                 ws_send_text(send_msg.c_str());
                 message = "";
             } else {

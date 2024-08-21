@@ -73,7 +73,7 @@
 #define SCANNER_COMMAND_RIGHT 6
 #define SCANNER_COMMAND_LEFT  7
 
-#define SEND_DATA_TIME_MS 1000
+#define SEND_DATA_TIME_MS 500
 
 void set_project_name(const char* name);
 void module_init();
