@@ -12,6 +12,7 @@
 #include "components/ota.h"
 #include "components/data.h"
 #include "components/module.h"
+#include "version.h"
 #include "website.h"
 
 #define SERVER_TAG_NAME "server"

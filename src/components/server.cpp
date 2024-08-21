@@ -119,6 +119,7 @@ void init_server() {
             doc["status"] = "ok";
             doc["path"] = "/api/info";
             JsonObject data = doc.createNestedObject("data");
+            data["version"] = ESP32_3D_SCANNER_VERSION;
             data["mdns"] = hostname;
             JsonObject sta = data.createNestedObject("sta");
             sta["ssid"] = ssid;
