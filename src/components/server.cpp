@@ -288,6 +288,12 @@ void init_server() {
         }
     });
 
+    server.on("/api/restart", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(200, "application/json", "{\"code\": 200,\"status\": \"ok\",\"path\": \"/api/restart\"}");
+        delay(1000);
+        ESP.restart();
+    });
+
     server.onNotFound([](AsyncWebServerRequest *request){
         request->send(404, "text/plain", "404 NOT Found!");
     });
