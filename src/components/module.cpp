@@ -161,7 +161,6 @@ void z_axis_motor_step(bool direction) {
          ( ( digitalRead(BUTTON_PIN) == LOW || z_steps <= 0 ) && direction == Z_AXIS_MOTOR_DOWN ) ) {
 
         ESP_LOGD(MODULE_TAG, "Z_AXIS_MOTOR_FULL_STEP: %u", z_steps);
-
         return;
     }
 
@@ -204,14 +203,12 @@ void scanner_loop() {
                     } else {
                         send_msg += "\",\"vl53l1x\":-1";
                     }
-                    Serial.printf("status: %u\n", status);
                     break;
                 }
             }
             send_msg += "}";
             ws_send_text(send_msg.c_str());
             message = "";
-            Serial.println(send_msg);
         }
         delay(100);
     } else if (_command == SCANNER_COMMAND_HOME) {
