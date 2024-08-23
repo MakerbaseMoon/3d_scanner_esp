@@ -40,10 +40,10 @@ This project is a 3D scanner based on the ESP32 microcontroller. It uses 2 stepp
 platformio.ini
 
 ```ini
--DCONFIG_ESP_WIFI_SSID="My WiFi SSID"
--DCONFIG_ESP_WIFI_PASSWORD="My WiFi Password"
--DCONFIG_ESP_WIFI_AP_SSID="My ESP32 AP SSID"
--DCONFIG_ESP_WIFI_AP_PASSWORD="My ESP32 AP Password"
+'-D CONFIG_ESP_WIFI_SSID="My WiFi SSID"'
+'-D CONFIG_ESP_WIFI_PASSWORD="My WiFi Password"'
+'-D CONFIG_ESP_WIFI_AP_SSID="My ESP32 AP SSID"'
+'-D CONFIG_ESP_WIFI_AP_PASSWORD="My ESP32 AP Password"'
 ```
 
 ## 🔧️ WebServer API

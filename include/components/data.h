@@ -26,6 +26,9 @@
 #define NVS_STA_PASSWORD_DEFAULT "password"
 #endif
 
+#pragma message ".SSID= " NVS_STA_SSID_DEFAULT
+#pragma message ".PASSWORD= " NVS_STA_PASSWORD_DEFAULT
+
 // AP WiFi
 
 #define NVS_AP_SSID             "AS"
@@ -40,6 +43,9 @@
 #else
 #define NVS_AP_PASSWORD_DEFAULT "password"
 #endif
+
+#pragma message ".AP_SSID= " NVS_AP_SSID_DEFAULT
+#pragma message ".AP_PASSWORD= " NVS_AP_PASSWORD_DEFAULT
 
 // mDNS
 
