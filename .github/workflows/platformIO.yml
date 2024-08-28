@@ -87,11 +87,19 @@ jobs:
       - name: Build PlatformIO Project
         run: pio run -e OTA
 
+      - name: Build PlatformIO Project
+        run: pio run -e OTA-VL53L1X
+
+      - name: Rename OTA-VL53L1X firmware.bin
+        run: mv .pio/build/OTA-VL53L1X/firmware.bin .pio/build/OTA-VL53L1X/firmware-VL53L1X.bin
+
       - name: Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           body_path: commit_msg.txt
           name: "ESP32 3D Scanner ${{ github.ref_name }}"
-          files: .pio/build/OTA/firmware.bin
+          files: |
+            .pio/build/OTA/firmware.bin
+            .pio/build/OTA-VL53L1X/firmware-VL53L1X.bin
           token: ${{ secrets.GITHUB_TOKEN }}

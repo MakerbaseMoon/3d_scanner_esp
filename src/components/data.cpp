@@ -64,7 +64,8 @@ void get_sta_wifi(char** ssid, char** password) {
         size_t required_size;
         err = nvs_get_str(nvs_handle, NVS_STA_SSID, NULL, &required_size);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading STA ssid from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading STA ssid from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading STA ssid from NVS", esp_err_to_name(err));
         } else {
             *ssid = (char*)malloc(required_size);
             if (*ssid == NULL) {
@@ -79,7 +80,8 @@ void get_sta_wifi(char** ssid, char** password) {
 
         err = nvs_get_str(nvs_handle, NVS_STA_PASSWORD, NULL, &required_size);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading STA password from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading STA password from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading STA password from NVS", esp_err_to_name(err));
         } else {
             *password = (char*)malloc(required_size);
             if (*password == NULL) {
@@ -161,7 +163,8 @@ void get_ap_wifi(char** ssid, char** password) {
         size_t required_size;
         err = nvs_get_str(nvs_handle, NVS_AP_SSID, NULL, &required_size);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading AP ssid from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading AP ssid from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading AP ssid from NVS", esp_err_to_name(err));
         } else {
             *ssid = (char*)malloc(required_size);
             if (*ssid == NULL) {
@@ -176,7 +179,8 @@ void get_ap_wifi(char** ssid, char** password) {
 
         err = nvs_get_str(nvs_handle, NVS_AP_PASSWORD, NULL, &required_size);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading AP password from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading AP password from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading AP password from NVS", esp_err_to_name(err));
         } else {
             *password = (char*)malloc(required_size);
             if (*password == NULL) {
@@ -251,7 +255,8 @@ void get_mdns_hostname(char** hostname) {
         size_t required_size;
         err = nvs_get_str(nvs_handle, NVS_MDNS_HOSTNAME, NULL, &required_size);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading mDNS hostname from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading mDNS hostname from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading mDNS hostname from NVS", esp_err_to_name(err));
         } else {
             *hostname = (char*)malloc(required_size);
             if (*hostname == NULL) {
@@ -313,7 +318,8 @@ void get_github(char** username, char** repo) {
         size_t required_size;
         err = nvs_get_str(nvs_handle, NVS_GITHUB_USERNAME, NULL, &required_size);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading Github username from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading Github username from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading Github username from NVS", esp_err_to_name(err));
         } else {
             *username = (char*)malloc(required_size);
             if (*username == NULL) {
@@ -328,7 +334,8 @@ void get_github(char** username, char** repo) {
 
         err = nvs_get_str(nvs_handle, NVS_GITHUB_REPO, NULL, &required_size);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading Github repo from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading Github repo from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading Github repo from NVS", esp_err_to_name(err));
         } else {
             *repo = (char*)malloc(required_size);
             if (*repo == NULL) {
@@ -425,52 +432,62 @@ void get_module(uint16_t* z_axis_max, uint16_t* z_axis_start_step, uint16_t* z_a
     } else {
         err = nvs_get_u16(nvs_handle, NVS_Z_AXIS_MAX, z_axis_max);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading Z axis max from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading Z axis max from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading Z axis max from NVS", esp_err_to_name(err));
             *z_axis_max = NVS_Z_AXIS_MAX_DEFAULT;
         }
         err = nvs_get_u16(nvs_handle, NVS_Z_AXIS_START_STEP, z_axis_start_step);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading Z axis start step from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading Z axis start step from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading Z axis start step from NVS", esp_err_to_name(err));
             *z_axis_start_step = NVS_Z_AXIS_START_STEP_DEFAULT;
         }
         err = nvs_get_u16(nvs_handle, NVS_Z_AXIS_DELAY_TIME, z_axis_delay_time);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading Z axis delay time from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading Z axis delay time from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading Z axis delay time from NVS", esp_err_to_name(err));
             *z_axis_delay_time = NVS_Z_AXIS_DELAY_TIME_DEFAULT;
         }
         err = nvs_get_u16(nvs_handle, NVS_Z_AXIS_ONE_TIME_STEP, z_axis_one_time_step);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading Z axis one time step from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading Z axis one time step from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading Z axis one time step from NVS", esp_err_to_name(err));
             *z_axis_one_time_step = NVS_Z_AXIS_ONE_TIME_STEP_DEFAULT;
         }
         err = nvs_get_u16(nvs_handle, NVS_X_Y_AXIS_MAX, x_y_axis_max);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading X Y axis max from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading X Y axis max from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading X Y axis max from NVS", esp_err_to_name(err));
             *x_y_axis_max = NVS_X_Y_AXIS_MAX_DEFAULT;
         }
         err = nvs_get_u16(nvs_handle, NVS_X_Y_AXIS_CHECK_TIMES, x_y_axis_check_times);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading X Y axis check times from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading X Y axis check times from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading X Y axis check times from NVS", esp_err_to_name(err));
             *x_y_axis_check_times = NVS_X_Y_AXIS_CHECK_TIMES_DEFAULT;
         }
         err = nvs_get_u16(nvs_handle, NVS_X_Y_AXIS_STEP_DELAY_TIME, x_y_axis_step_delay_time);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading X Y axis step delay time from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading X Y axis step delay time from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading X Y axis step delay time from NVS", esp_err_to_name(err));
             *x_y_axis_step_delay_time = NVS_X_Y_AXIS_STEP_DELAY_TIME_DEFAULT;
         }
         err = nvs_get_u16(nvs_handle, NVS_X_Y_AXIS_ONE_TIME_STEP, x_y_axis_one_time_step);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading X Y axis one time step from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading X Y axis one time step from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading X Y axis one time step from NVS", esp_err_to_name(err));
             *x_y_axis_one_time_step = NVS_X_Y_AXIS_ONE_TIME_STEP_DEFAULT;
         }
         err = nvs_get_u16(nvs_handle, NVS_VL53L1X_CENTER, vl53l1x_center);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading VL53L1X center from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading VL53L1X center from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading VL53L1X center from NVS", esp_err_to_name(err));
             *vl53l1x_center = NVS_VL53L1X_CENTER_DEFAULT;
         }
         err = nvs_get_u16(nvs_handle, NVS_VL53L1X_TIMEING_BUDGET, vl53l1x_timeing_budget);
         if (err != ESP_OK) {
-            ESP_LOGE(NVS_TAG, "Error (%s) reading VL53L1X timeing budget from NVS", esp_err_to_name(err));
+            if (err == ESP_ERR_NVS_NOT_FOUND) ESP_LOGW(NVS_TAG, "Error (%s) reading VL53L1X timeing budget from NVS", esp_err_to_name(err));
+            else ESP_LOGE(NVS_TAG, "Error (%s) reading VL53L1X timeing budget from NVS", esp_err_to_name(err));
             *vl53l1x_timeing_budget = NVS_VL53L1X_TIMEING_BUDGET_DEFAULT;
         }
         nvs_close(nvs_handle);

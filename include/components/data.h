@@ -26,9 +26,6 @@
 #define NVS_STA_PASSWORD_DEFAULT "password"
 #endif
 
-#pragma message ".SSID= " NVS_STA_SSID_DEFAULT
-#pragma message ".PASSWORD= " NVS_STA_PASSWORD_DEFAULT
-
 // AP WiFi
 
 #define NVS_AP_SSID             "AS"
@@ -43,9 +40,6 @@
 #else
 #define NVS_AP_PASSWORD_DEFAULT "password"
 #endif
-
-#pragma message ".AP_SSID= " NVS_AP_SSID_DEFAULT
-#pragma message ".AP_PASSWORD= " NVS_AP_PASSWORD_DEFAULT
 
 // mDNS
 
@@ -65,10 +59,10 @@
 #define NVS_Z_AXIS_DELAY_TIME    "ZDT"
 #define NVS_Z_AXIS_ONE_TIME_STEP "ZOTS"
 
-#define NVS_Z_AXIS_MAX_DEFAULT         47000
-#define NVS_Z_AXIS_START_STEP_DEFAULT      0
-#define NVS_Z_AXIS_DELAY_TIME_DEFAULT    100
-#define NVS_Z_AXIS_ONE_TIME_STEP_DEFAULT 100
+#define NVS_Z_AXIS_MAX_DEFAULT          47000
+#define NVS_Z_AXIS_START_STEP_DEFAULT       0
+#define NVS_Z_AXIS_DELAY_TIME_DEFAULT     100
+#define NVS_Z_AXIS_ONE_TIME_STEP_DEFAULT  400
 
 #define NVS_X_Y_AXIS_MAX             "2M"
 #define NVS_X_Y_AXIS_CHECK_TIMES     "2CT"
@@ -76,16 +70,16 @@
 #define NVS_X_Y_AXIS_ONE_TIME_STEP   "2OTS"
 
 #define NVS_X_Y_AXIS_MAX_DEFAULT             6400
-#define NVS_X_Y_AXIS_CHECK_TIMES_DEFAULT       20
-#define NVS_X_Y_AXIS_STEP_DELAY_TIME_DEFAULT  100
-#define NVS_X_Y_AXIS_ONE_TIME_STEP_DEFAULT     16
+#define NVS_X_Y_AXIS_CHECK_TIMES_DEFAULT        1
+#define NVS_X_Y_AXIS_STEP_DELAY_TIME_DEFAULT   50
+#define NVS_X_Y_AXIS_ONE_TIME_STEP_DEFAULT      8
 
 #define NVS_VL53L1X_CENTER         "R_C"
 #define NVS_VL53L1X_TIMEING_BUDGET "R_TB"
 
 #define NVS_VL53L1X_CENTER_DEFAULT            70
 // Valid timing budgets: 15, 20, 33, 50, 100, 200 and 500ms!
-#define NVS_VL53L1X_TIMEING_BUDGET_DEFAULT    15 
+#define NVS_VL53L1X_TIMEING_BUDGET_DEFAULT    200 
 
 // Functions 
 

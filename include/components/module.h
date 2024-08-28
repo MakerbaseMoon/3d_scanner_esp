@@ -4,9 +4,6 @@
 
 #include <Arduino.h>
 
-#include <SD.h>
-#include <FS.h>
-#include <SPI.h>
 #include <Wire.h>
 
 #include <math.h>
@@ -16,7 +13,11 @@
 #include "esp_log.h"
 
 #include <ArduinoJson.h>
+#ifdef CONFIG_VL53L1X
 #include <Adafruit_VL53L1X.h>
+#else
+#include <Adafruit_VL53L0X.h>
+#endif
 
 #include "components/data.h"
 #include "components/server.h"

@@ -142,7 +142,7 @@ void init_server() {
             module["x_y_axis_one_time_step"] = x_y_axis_one_time_step;
             module["vl53l1x_center"] = vl53l1x_center;
             module["vl53l1x_timeing_budget"] = vl53l1x_timeing_budget;
-            
+
             String response;
             serializeJson(doc, response);
             request->send(200, "application/json", response);

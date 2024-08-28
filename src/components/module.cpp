@@ -3,7 +3,11 @@
 
 const char* MODULE_TAG = MODULE_TAG_NAME;
 
+#ifdef CONFIG_VL53L1X
 Adafruit_VL53L1X vl53 = Adafruit_VL53L1X();
+#else
+Adafruit_VL53L0X vl53 = Adafruit_VL53L0X();
+#endif
 
 uint16_t z_axis_max = NVS_Z_AXIS_MAX_DEFAULT;
 uint16_t z_axis_start_step = NVS_Z_AXIS_START_STEP_DEFAULT;
@@ -18,7 +22,7 @@ uint16_t x_y_axis_one_time_step = NVS_X_Y_AXIS_ONE_TIME_STEP_DEFAULT;
 uint16_t vl53l1x_center = NVS_VL53L1X_CENTER_DEFAULT;
 uint16_t vl53l1x_timeing_budget = NVS_VL53L1X_TIMEING_BUDGET_DEFAULT;
 
-uint8_t _command = 0;
+uint8_t _command = SCANNER_COMMAND_STOP;
 uint64_t _steps = 0;
 
 uint32_t z_steps = 0;
@@ -30,7 +34,7 @@ bool sd_card_ready = false;
 String project_name = "";
 String message = "";
 
-uint64_t msg_len = 0;
+uint64_t point_count = 0;
 
 uint16_t distance_max = 0;
 uint16_t distance_min = 0;
@@ -40,6 +44,9 @@ unsigned long last_send_data_time = 0;
 
 void writeFile(fs::FS &fs, const char * path, const char * message);
 void appendFile(fs::FS &fs, const char * path, const char * message);
+uint16_t get_count_distance(uint16_t count);
+uint16_t get_distance();
+void get_x_y(double angle, double r, double* x, double* y);
 
 int16_t findMode(const std::vector<int16_t>& numbers) {
     std::unordered_map<int16_t, int16_t> frequencyMap;
@@ -87,45 +94,54 @@ void motor_init() {
     digitalWrite(X_Y_AXIS_MOTOR_DIR, LOW);
 }
 
-void sd_card_init() {
-    SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI, SPI_CS);
-    SPI.setDataMode(SPI_MODE0);
-
-    if (!SD.begin(SPI_CS, SPI)) {
-        ESP_LOGE(MODULE_TAG, "Failed to mount SD card");
-        return;
-    }
-
-    if(SD.cardType() == CARD_NONE){
-        ESP_LOGE(MODULE_TAG, "No SD card attached");
-        return;
-    }
-
-    ESP_LOGD(MODULE_TAG, "SD Card Type: %s", SD.cardType() == CARD_MMC ? "MMC" : SD.cardType() == CARD_SD ? "SDSC" : "SDHC");
-    sd_card_ready = true;
-}
-
 void vl53_init() {
-    Wire.begin();
+    if(!Wire.begin()) {
+        return;
+    }
 
+#ifdef CONFIG_VL53L1X
     if (!vl53.begin(0x29, &Wire)) {
         ESP_LOGE(MODULE_TAG, "Failed to boot VL53L1X: ", vl53.vl_status);
         vl53.end();
         return;
     }
 
-    // vl53.VL53L1X_SetDistanceThreshold(40, 142, 2, 1);
+    uint32_t distance;
+    uint8_t status;
+    vl53.VL53L1X_GetRangeStatus(&status);
 
-    if (!vl53.startRanging()) {
-        ESP_LOGE(MODULE_TAG, "Failed to start VL53L1X ranging: ", vl53.vl_status);
+    if(vl53.GetDistance(&distance) != 0) {
+        vl53.clearInterrupt();
+        ESP_LOGE(MODULE_TAG, "Failed to get VL53L1X distance: ", vl53.vl_status);
+        vl53.stopRanging();
         vl53.end();
         return;
     }
 
-    vl53_ready = true;
+    if (!vl53.startRanging()) {
+        ESP_LOGE(MODULE_TAG, "Failed to start VL53L1X ranging: ", vl53.vl_status);
+        vl53.stopRanging();
+        vl53.end();
+        return;
+    }
 
     vl53.setTimingBudget(vl53l1x_timeing_budget);
     ESP_LOGD(MODULE_TAG, "VL53L1X Timing budget (ms): %u", vl53.getTimingBudget());
+#else
+    if (!vl53.begin()) {
+        ESP_LOGE(MODULE_TAG, "Failed to boot VL53L0X");
+        return;
+    }
+
+    vl53.setMeasurementTimingBudgetMicroSeconds(vl53l1x_timeing_budget * 1000);
+    if (!vl53.startRangeContinuous()) {
+        ESP_LOGE(MODULE_TAG, "Failed to start VL53L0X ranging");
+        vl53.stopRangeContinuous();
+        return;
+    }
+#endif
+    vl53_ready = true;
+
 }
 
 void module_init() {
@@ -134,14 +150,13 @@ void module_init() {
 
     module_data_init();
     motor_init();
-    sd_card_init();
 
     vl53_init();
 }
 
 void set_project_name(const char* name) {
     project_name = name;
-    writeFile(SD, ("/" + project_name + ".csv").c_str(), "");
+    point_count = 0;
 }
 
 void set_command(uint8_t command, uint32_t steps) {
@@ -153,7 +168,6 @@ void set_command(uint8_t command, uint32_t steps) {
         start_time = millis();
     }
 
-    msg_len = 0;
     x_y_steps = 0;
 }
 
@@ -196,26 +210,12 @@ void scanner_loop() {
     if (_command == SCANNER_COMMAND_STOP) {
         if (millis() - last_send_data_time > SEND_DATA_TIME_MS) {
             last_send_data_time = millis();
-            String send_msg = "{\"z_steps\":" + String(z_steps);
-            while (vl53_ready) {
-                if (vl53.dataReady()) {
-                    uint32_t distance;
-                    uint8_t status;
-                    vl53.startRanging();
-                    vl53.VL53L1X_GetRangeStatus(&status);
-                    if(vl53.GetDistance(&distance) == 0) {
-                        send_msg += ",\"vl53l1x\":" + String(distance);
-                    } else {
-                        send_msg += ",\"vl53l1x\":-1";
-                    }
-                    break;
-                }
-            }
-            send_msg += ",\"name\":\"" + project_name + "\",\"status\":\"stop\"}";
+            String send_msg =   "{\"z_steps\":" + String(z_steps) + 
+                                ",\"vl53l1x\":" + String(get_distance()) + 
+                                ",\"name\":\"" + project_name + "\",\"status\":\"stop\"}";
             ws_send_text(send_msg.c_str());
-            message = "";
         }
-        delay(100);
+        delay(800);
     } else if (_command == SCANNER_COMMAND_HOME) {
         ESP_LOGD(MODULE_TAG, "Home command");
         z_steps = z_axis_max;
@@ -229,45 +229,30 @@ void scanner_loop() {
         for (uint16_t i = 0; i < x_y_axis_one_time_step; i++) {
             x_y_axis_motor_step(HIGH);
         }
+
+        double x = 0, y = 0, r = 20;
         if(vl53_ready) {
-            std::vector<int16_t> distances;
-            int count = 0;
-            while(count < x_y_axis_check_times) {
-                while(!vl53.dataReady()) { delay(20); }
-                int16_t distance = vl53.distance();
-                Serial.printf("Distance: %d\n", distance);
-                if (distance < distance_min || distance > distance_max) {
-                    continue;
-                }
-                distances.push_back(distance);
-                vl53.clearInterrupt();
-                count++;
-            }
-
-            int16_t distanceMode = findMode(distances);
-
-            float angle = x_y_steps * MOTOR1_DEFAULT_MICRO_STEP_DEGREE; // 1 / 32 steps, 1.8 degree per step
-            double r = fabs(double(vl53l1x_center) - double(distanceMode));
-            double x = r * cos(angle * PI / 180);
-            double y = r * sin(angle * PI / 180);
-            ESP_LOGI(MODULE_TAG, "Time: %.4f, angle: %.5f, x_y_steps: %u, z_steps: %u", ((millis() - start_time) / 1000.0), angle, x_y_steps, z_steps);
-            ESP_LOGI(MODULE_TAG, "R: %.2f, X: %.5f, Y: %.5f, Z: %.5f", r, x, y, z_steps * Z_AXIS_STEP_MM);
-            Serial.printf("%.5f, %.5f, %.5f, %.5f\n", r, x, y, z_steps * Z_AXIS_STEP_MM);
-            message += "[" + String(x) + "," + String(y) + "," + String(z_steps * Z_AXIS_STEP_MM) + "]";
-            if (( msg_len++ % 1 ) == 0) {
-                if (sd_card_ready) {
-                    appendFile(SD, ("/" + project_name + ".csv").c_str() , message.c_str());
-                }
-                String send_msg = "{\"name\":\"" + project_name + "\",\"points_count\":" + String(msg_len) + ",\"is_last\":false,\"status\":\"scan\",\"points\":[" + message + "]}";
-                ws_send_text(send_msg.c_str());
-                message = "";
-            } else {
-                message += ",";
-            }
-
+            int16_t distanceMode = get_count_distance(x_y_axis_check_times);
+            r = fabs(double(vl53l1x_center) - double(distanceMode));
+            get_x_y(x_y_steps * MOTOR1_DEFAULT_MICRO_STEP_DEGREE, r,  &x,  &y);
+        } else {
+            get_x_y(x_y_steps * MOTOR1_DEFAULT_MICRO_STEP_DEGREE, r,  &x,  &y);
+            delay(800);
         }
 
-        x_y_steps+=x_y_axis_one_time_step;
+        String point = "[" + String(x) + "," + String(y) + "," + String(z_steps * 0.00125) + "]";
+        message = "{\"name\":\"" + project_name + "\"" +
+                    ",\"status\":\"scan\"" +
+                    ",\"points_count\":" + String(++point_count) +
+                    ",\"time\":" + String((millis() - start_time) / 1000.0) +
+                    ",\"is_last\":false" +
+                    ",\"z_steps\":" + String(z_steps) +
+                    ",\"r\":" + String(r) +
+                    ",\"points\":[" + point + "]}";
+
+        ws_send_text(message.c_str());
+
+        x_y_steps += x_y_axis_one_time_step;
         if(x_y_steps >= x_y_axis_max) {
             ESP_LOGD(MODULE_TAG, "X Y Full step max count, Z axis steps: %u", z_steps);
             for (uint16_t i = 0; i < z_axis_one_time_step; i++) {
@@ -301,34 +286,49 @@ void scanner_loop() {
     }
 }
 
-void writeFile(fs::FS &fs, const char * path, const char * message) {
-    Serial.printf("Writing file: %s\n", path);
-
-    File file = fs.open(path, FILE_WRITE);
-    if(!file){
-        Serial.println("Failed to open file for writing");
-        return;
-    }
-    if(file.print(message)){
-        Serial.println("File written");
-    } else {
-        Serial.println("Write failed");
-    }
-    file.close();
+void get_x_y(double angle, double r, double* x, double* y) {
+    *x = r * cos(angle * PI / 180);
+    *y = r * sin(angle * PI / 180);
 }
 
-void appendFile(fs::FS &fs, const char * path, const char * message) {
-    Serial.printf("Appending to file: %s\n", path);
+uint16_t get_count_distance(uint16_t count) {
+    if (!vl53_ready) return 0;
+    std::vector<int16_t> distances;
+    while(count > 0) {
+        #ifdef CONFIG_VL53L1X
+        while(!vl53.dataReady()) { delay(20); }
+        #endif
+        delay(20);
+        uint16_t distance = get_distance();
+        if (distance < distance_min || distance > distance_max) continue; 
+        distances.push_back(uint16_t(distance));
+        count--;
+    }
 
-    File file = fs.open(path, FILE_APPEND);
-    if(!file){
-        Serial.println("Failed to open file for appending");
-        return;
+    if (distances.size() == 0) return 0;
+    return findMode(distances);
+} 
+
+uint16_t get_distance() {
+    if (!vl53_ready) return 0;
+    while(1) {
+        #ifdef CONFIG_VL53L1X
+        if (vl53.dataReady()) {
+            uint32_t distance;
+            uint8_t status;
+            vl53.VL53L1X_GetRangeStatus(&status);
+            if(vl53.GetDistance(&distance) == 0) {
+                vl53.clearInterrupt();
+                return distance;
+            } else {
+                vl53.clearInterrupt();
+                return 0;
+            }
+        }
+        #else
+        if (vl53.isRangeComplete()) {
+            return vl53.readRange();
+        }
+        #endif
     }
-    if(file.print(message)){
-        Serial.println("Message appended");
-    } else {
-        Serial.println("Append failed");
-    }
-    file.close();
 }
