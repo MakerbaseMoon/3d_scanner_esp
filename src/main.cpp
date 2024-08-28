@@ -14,4 +14,5 @@ void setup() {
 
 void loop() {
     scanner_loop();
+    ota_loop();
 }
