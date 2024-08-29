@@ -19,12 +19,16 @@ void flash_firmware(const char* username, const char* repo, int asset_id) {
 
 void ota_loop() {
     if(is_ota) {
+        Serial.println("OTA started");
         GithubReleaseOTA ota(_username.c_str(), _repo.c_str());
         int result = ota.flashByAssetId(_asset_id, U_FLASH);
         if (result == 0) {
             ESP_LOGI(OTA_TAG, "OTA success");
+            Serial.println("OTA success, please restart the device");
+            ESP.restart();
         } else {
             ESP_LOGE(OTA_TAG, "OTA failed code: %d", result);
         }
+        is_ota = false;
     }
 }

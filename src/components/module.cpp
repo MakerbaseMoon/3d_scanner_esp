@@ -100,6 +100,7 @@ void vl53_init() {
     }
 
 #ifdef CONFIG_VL53L1X
+    Serial.println("Use VL53L1X");
     if (!vl53.begin(0x29, &Wire)) {
         ESP_LOGE(MODULE_TAG, "Failed to boot VL53L1X: ", vl53.vl_status);
         vl53.end();
@@ -128,6 +129,7 @@ void vl53_init() {
     vl53.setTimingBudget(vl53l1x_timeing_budget);
     ESP_LOGD(MODULE_TAG, "VL53L1X Timing budget (ms): %u", vl53.getTimingBudget());
 #else
+    Serial.println("Use VL53L0X");
     if (!vl53.begin()) {
         ESP_LOGE(MODULE_TAG, "Failed to boot VL53L0X");
         return;
@@ -155,12 +157,14 @@ void module_init() {
 }
 
 void set_project_name(const char* name) {
+    Serial.printf("Set project name: %s\n", name);
     project_name = name;
     point_count = 0;
 }
 
 void set_command(uint8_t command, uint32_t steps) {
     ESP_LOGI(MODULE_TAG, "Set command: %u, step: %u", command, steps);
+    Serial.printf("Set command: %u, step: %u\n", command, steps);
     _command = command;
     _steps = steps;
 
@@ -301,7 +305,7 @@ uint16_t get_count_distance(uint16_t count) {
         delay(20);
         uint16_t distance = get_distance();
         if (distance < distance_min || distance > distance_max) continue; 
-        distances.push_back(uint16_t(distance));
+        distances.push_back(distance);
         count--;
     }
 

@@ -33,11 +33,13 @@ void set_ap_name(const char* name) {
     if (ap_ssid != NULL && ap_password != NULL) {
         if (name == NULL || strlen(name) == 0) {
             ESP_LOGI(NETWORK_TAG, "Setting AP name to %s, password: %s", ap_ssid, ap_password);
+            Serial.printf("AP %s, password: %s\n", ap_ssid, ap_password);
             WiFi.softAP(ap_ssid, ap_password);
         } else {
             char* new_ssid = (char*)malloc(strlen(ap_ssid) + strlen(name) + 1);
             sprintf(new_ssid, "%s-%s", ap_ssid, name);
             ESP_LOGI(NETWORK_TAG, "Setting AP name to %s, password: %s", new_ssid, ap_password);
+            Serial.printf("AP %s, password: %s\n", new_ssid, ap_password);
             WiFi.softAP(new_ssid, ap_password);
         }
     }
@@ -66,6 +68,7 @@ void init_network() {
     WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) {
         switch (event) {
             case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+                Serial.printf("Connected to %s, IP address: %s\n", sta_ssid, WiFi.localIP().toString().c_str());
                 lost_ip = false;
                 set_ap_name(WiFi.localIP().toString().c_str());
                 break;

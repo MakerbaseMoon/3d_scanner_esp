@@ -276,7 +276,7 @@ void init_server() {
     server.on("/api/ota", HTTP_GET, [](AsyncWebServerRequest *request) {
         try{
             if (request->getParam("username") != NULL && request->getParam("repo") != NULL && request->getParam("id") != NULL) {
-                flash_firmware(request->getParam("username")->value().c_str(), request->getParam("repo")->value().c_str(), request->getParam("asset_id")->value().toInt());
+                flash_firmware(request->getParam("username")->value().c_str(), request->getParam("repo")->value().c_str(), request->getParam("id")->value().toInt());
                 request->send(200, "application/json", "{\"code\": 200,\"status\": \"ok\",\"path\": \"/api/ota\"}");
             } else {
                 request->send(400, "application/json", "{\"code\": 400,\"status\": \"param not found\",\"path\": \"/api/ota\"}");
